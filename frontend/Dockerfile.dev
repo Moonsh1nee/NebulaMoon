@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /frontend
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+CMD ["pnpm", "run", "dev"]

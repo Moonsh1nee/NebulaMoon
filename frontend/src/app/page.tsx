@@ -17,7 +17,7 @@ export default function Home() {
           <li>
             Get started by editing <code>src/app/page.tsx</code>.
           </li>
-          <li>Hi there! Your changes will be reflected instantly.</li>
+          <li>Hi there! Your will be reflected instantly.</li>
         </ol>
 
         <div className={styles.ctas}>

@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { TasksModule } from './tasks/tasks.module';
+import { FieldsModule } from './fields/fields.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    MongooseModule.forRoot(
+      'mongodb://root:example@mongodb:27017/nebulamoon?authSource=admin',
+    ),
+    TasksModule,
+    FieldsModule,
+  ],
 })
 export class AppModule {}

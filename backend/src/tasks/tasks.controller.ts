@@ -8,6 +8,7 @@ import {
   Param,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task } from './task.schema';
@@ -19,8 +20,9 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  async findAll(): Promise<Task[]> {
-    return this.tasksService.findAll();
+  async findAll(@Query('fields') fields: string): Promise<Task[]> {
+    const filters = fields ? JSON.parse(fields) : {};
+    return this.tasksService.findAll(filters);
   }
 
   @Get(':id')

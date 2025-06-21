@@ -17,8 +17,37 @@ export class TasksService {
     @InjectModel(Field.name) private fieldModel: Model<Field>,
   ) {}
 
-  async findAll(): Promise<Task[]> {
-    return this.taskModel.find().populate('fields.fieldId').exec();
+  async findAll(filters: Record<string, any> = {}): Promise<Task[]> {
+    try {
+      const query: any = {};
+      if (Object.keys(filters).length > 0) {
+        const fieldNames = Object.keys(filters);
+        const fieldDefs = await this.fieldModel
+          .find({ name: { $in: fieldNames } })
+          .exec();
+        if (fieldDefs.length === 0) {
+          throw new BadRequestException('No matching fields found');
+        }
+
+        const fieldMap = fieldDefs.reduce((map, field) => {
+          map[field.name] = field._id;
+          return map;
+        }, {});
+
+        query['fields'] = {
+          $elemMatch: {
+            fieldId: { $in: Object.values(fieldMap) },
+            value: { $in: Object.values(filters) },
+          },
+        };
+      }
+      return await this.taskModel.find(query).populate('fields.fieldId').exec();
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to filter tasks: ${error.message}`);
+    }
   }
 
   async findOne(id: string): Promise<Task> {
@@ -34,125 +63,153 @@ export class TasksService {
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
     const { title, fields } = createTaskDto;
-    for (const field of fields || []) {
-      const fieldDef = await this.fieldModel.findById(field.fieldId).exec();
-      if (!fieldDef) {
-        throw new NotFoundException(`Field with ID ${field.fieldId} not found`);
+    try {
+      if (fields) {
+        for (const field of fields) {
+          if (!field.fieldId || field.value === undefined) {
+            throw new BadRequestException('Field ID and value are required');
+          }
+          const fieldDef = await this.fieldModel.findById(field.fieldId).exec();
+          if (!fieldDef) {
+            throw new NotFoundException(
+              `Field with ID ${field.fieldId} not found`,
+            );
+          }
+          switch (fieldDef.type) {
+            case 'date':
+              if (!this.isValidDate(field.value)) {
+                throw new BadRequestException(
+                  `Invalid date for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'select':
+              if (!this.isValidOption(field.value, fieldDef.options)) {
+                throw new BadRequestException(
+                  `Invalid value for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'multi-select':
+              if (
+                !Array.isArray(field.value) ||
+                !this.isValidOption(field.value, fieldDef.options)
+              ) {
+                throw new BadRequestException(
+                  `Invalid value for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'checkbox':
+              if (typeof field.value !== 'boolean') {
+                throw new BadRequestException(
+                  `Invalid boolean for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'text':
+              if (typeof field.value !== 'string') {
+                throw new BadRequestException(
+                  `Invalid string for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            default:
+              throw new BadRequestException(
+                `Unsupported field type ${fieldDef.type}`,
+              );
+          }
+        }
       }
-      // Валидация значения по типу поля
-      switch (fieldDef.type) {
-        case 'date':
-          if (!this.isValidDate(field.value)) {
-            throw new BadRequestException(
-              `Invalid date for field ${fieldDef.name}`,
-            );
-          }
-          break;
-        case 'select':
-          if (!this.isValidOption(field.value, fieldDef.options)) {
-            throw new BadRequestException(
-              `Invalid value for field ${fieldDef.name}`,
-            );
-          }
-          break;
-        case 'multi-select':
-          if (
-            !Array.isArray(field.value) ||
-            !this.isValidOption(field.value, fieldDef.options)
-          ) {
-            throw new BadRequestException(
-              `Invalid value for field ${fieldDef.name}`,
-            );
-          }
-          break;
-        case 'checkbox':
-          if (typeof field.value !== 'boolean') {
-            throw new BadRequestException(
-              `Invalid boolean for field ${fieldDef.name}`,
-            );
-          }
-          break;
-        case 'text':
-          if (typeof field.value !== 'string') {
-            throw new BadRequestException(
-              `Invalid string for field ${fieldDef.name}`,
-            );
-          }
-          break;
-        default:
-          throw new BadRequestException(
-            `Unsupported field type ${fieldDef.type}`,
-          );
+      const task = new this.taskModel({ title, fields });
+      return await task.save();
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
       }
+      throw new BadRequestException(`Failed to create task: ${error.message}`);
     }
-    const task = new this.taskModel({ title, fields });
-    return task.save();
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    // Валидация для обновления
-    if (updateTaskDto.fields) {
-      for (const field of updateTaskDto.fields) {
-        const fieldDef = await this.fieldModel.findById(field.fieldId).exec();
-        if (!fieldDef) {
-          throw new NotFoundException(
-            `Field with ID ${field.fieldId} not found`,
-          );
-        }
-        switch (fieldDef.type) {
-          case 'date':
-            if (!this.isValidDate(field.value)) {
-              throw new BadRequestException(
-                `Invalid date for field ${fieldDef.name}`,
-              );
-            }
-            break;
-          case 'select':
-            if (!this.isValidOption(field.value, fieldDef.options)) {
-              throw new BadRequestException(
-                `Invalid value for field ${fieldDef.name}`,
-              );
-            }
-            break;
-          case 'multi-select':
-            if (
-              !Array.isArray(field.value) ||
-              !this.isValidOption(field.value, fieldDef.options)
-            ) {
-              throw new BadRequestException(
-                `Invalid value for field ${fieldDef.name}`,
-              );
-            }
-            break;
-          case 'checkbox':
-            if (typeof field.value !== 'boolean') {
-              throw new BadRequestException(
-                `Invalid boolean for field ${fieldDef.name}`,
-              );
-            }
-            break;
-          case 'text':
-            if (typeof field.value !== 'string') {
-              throw new BadRequestException(
-                `Invalid string for field ${fieldDef.name}`,
-              );
-            }
-            break;
-          default:
-            throw new BadRequestException(
-              `Unsupported field type ${fieldDef.type}`,
+    try {
+      if (updateTaskDto.fields) {
+        for (const field of updateTaskDto.fields) {
+          if (!field.fieldId || field.value === undefined) {
+            throw new BadRequestException('Field ID and value are required');
+          }
+          const fieldDef = await this.fieldModel.findById(field.fieldId).exec();
+          if (!fieldDef) {
+            throw new NotFoundException(
+              `Field with ID ${field.fieldId} not found`,
             );
+          }
+          switch (fieldDef.type) {
+            case 'date':
+              if (!this.isValidDate(field.value)) {
+                throw new BadRequestException(
+                  `Invalid date for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'select':
+              if (!this.isValidOption(field.value, fieldDef.options)) {
+                throw new BadRequestException(
+                  `Invalid value for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'multi-select':
+              if (
+                !Array.isArray(field.value) ||
+                !this.isValidOption(field.value, fieldDef.options)
+              ) {
+                throw new BadRequestException(
+                  `Invalid value for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'checkbox':
+              if (typeof field.value !== 'boolean') {
+                throw new BadRequestException(
+                  `Invalid boolean for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            case 'text':
+              if (typeof field.value !== 'string') {
+                throw new BadRequestException(
+                  `Invalid string for field ${fieldDef.name}`,
+                );
+              }
+              break;
+            default:
+              throw new BadRequestException(
+                `Unsupported field type ${fieldDef.type}`,
+              );
+          }
         }
       }
+      const task = await this.taskModel
+        .findByIdAndUpdate(id, updateTaskDto, { new: true })
+        .populate('fields.fieldId')
+        .exec();
+      if (!task) {
+        throw new NotFoundException(`Task with ID ${id} not found`);
+      }
+      return task;
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to update task: ${error.message}`);
     }
-    const task = await this.taskModel
-      .findByIdAndUpdate(id, updateTaskDto, { new: true })
-      .populate('fields.fieldId')
-      .exec();
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-    return task;
   }
 
   async delete(id: string): Promise<void> {
@@ -163,13 +220,17 @@ export class TasksService {
   }
 
   private isValidDate(value: any): boolean {
-    return !isNaN(new Date(value).getTime());
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      return false;
+    }
+    const date = new Date(value);
+    return !isNaN(date.getTime()) && date.toISOString() !== 'Invalid Date';
   }
 
   private isValidOption(value: any, options: string[]): boolean {
     if (Array.isArray(value)) {
-      return value.every((v) => options.includes(v));
+      return value.every((v) => typeof v === 'string' && options.includes(v));
     }
-    return options.includes(value);
+    return typeof value === 'string' && options.includes(value);
   }
 }

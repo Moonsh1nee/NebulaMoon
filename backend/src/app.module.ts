@@ -8,8 +8,8 @@ import { FieldsModule } from './fields/fields.module';
     MongooseModule.forRoot(
       'mongodb://root:example@mongodb:27017/nebulamoon?authSource=admin',
     ),
-    TasksModule,
     FieldsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

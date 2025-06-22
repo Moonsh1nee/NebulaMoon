@@ -1,13 +1,19 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
-  Body,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { FieldsService } from './fields.service';
 import { Field } from './field.schema';
+
+export class CreateFieldDto {
+  name: string;
+  type: string;
+  options?: string[];
+}
 
 @Controller('fields')
 export class FieldsController {
@@ -15,10 +21,12 @@ export class FieldsController {
 
   @Post()
   @UsePipes(new ValidationPipe())
-  async create(
-    @Body() body: { name: string; type: string; options?: string[] },
-  ): Promise<Field> {
-    return this.fieldsService.create(body.name, body.type, body.options);
+  async create(@Body() createFieldDto: CreateFieldDto): Promise<Field> {
+    return this.fieldsService.create(
+      createFieldDto.name,
+      createFieldDto.type,
+      createFieldDto.options,
+    );
   }
 
   @Get()

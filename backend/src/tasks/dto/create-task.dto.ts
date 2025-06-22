@@ -1,7 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class TaskFieldDto {
   @IsString()
+  @IsNotEmpty()
   fieldId: string;
 
   @IsNotEmpty()
@@ -15,5 +23,7 @@ export class CreateTaskDto {
 
   @IsArray()
   @IsOptional()
-  fields?: TaskFieldDto[];
+  @ValidateNested({ each: true })
+  @Type(() => TaskFieldDto)
+  fields: TaskFieldDto[];
 }

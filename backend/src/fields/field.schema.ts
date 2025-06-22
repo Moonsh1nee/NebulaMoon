@@ -8,7 +8,7 @@ export class Field extends Document {
 
   @Prop({
     required: true,
-    enum: ['text', 'date', 'select', 'multi-select', 'checkbox'],
+    enum: ['text', 'date', 'double-date', 'select', 'multi-select', 'checkbox'],
   })
   type: string;
 

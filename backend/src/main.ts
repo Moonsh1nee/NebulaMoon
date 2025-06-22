@@ -3,6 +3,11 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3001, '0.0.0.0');
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,PUT,POST,DELETE',
+    allowedHeaders: 'Content-type, Authorization',
+  });
+  await app.listen(3001);
 }
 bootstrap();

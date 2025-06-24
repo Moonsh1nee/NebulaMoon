@@ -8,31 +8,45 @@ import {
   Param,
   UsePipes,
   ValidationPipe,
-  Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task } from './task.schema';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
+
+interface AuthRequest extends Request {
+  user: { id: string; email: string };
+}
 
 @Controller('tasks')
+@UseGuards(AuthGuard('jwt'))
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  async findAll(): Promise<Task[]> {
-    return this.tasksService.findAll();
+  async findAll(@Req() req: AuthRequest): Promise<Task[]> {
+    return this.tasksService.findAll(req.user.id);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Task> {
-    return this.tasksService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: AuthRequest,
+  ): Promise<Task> {
+    return this.tasksService.findOne(id, req.user.id);
   }
 
   @Post()
   @UsePipes(new ValidationPipe())
-  async create(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksService.create(createTaskDto);
+  async create(
+    @Body() createTaskDto: CreateTaskDto,
+    @Req() req: AuthRequest,
+  ): Promise<Task> {
+    return this.tasksService.create(createTaskDto, req.user.id);
   }
 
   @Put(':id')
@@ -40,12 +54,16 @@ export class TasksController {
   async update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @Req() req: AuthRequest,
   ): Promise<Task> {
-    return this.tasksService.update(id, updateTaskDto);
+    return this.tasksService.update(id, updateTaskDto, req.user.id);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
-    return this.tasksService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @Req() req: AuthRequest,
+  ): Promise<void> {
+    return this.tasksService.delete(id, req.user.id);
   }
 }

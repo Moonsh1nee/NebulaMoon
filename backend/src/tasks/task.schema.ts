@@ -15,6 +15,9 @@ export class Task extends Document {
   @Prop({ required: true })
   title: string;
 
+  @Prop({ required: true })
+  userId: string;
+
   @Prop([{ type: TaskField }])
   fields: TaskField[];
 }

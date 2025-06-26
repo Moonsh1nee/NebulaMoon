@@ -8,12 +8,7 @@ import {
 } from '@nestjs/common';
 import { FieldsService } from './fields.service';
 import { Field } from './field.schema';
-
-export class CreateFieldDto {
-  name: string;
-  type: string;
-  options?: string[];
-}
+import { CreateFieldDto } from './dto/create-field.dto';
 
 @Controller('fields')
 export class FieldsController {

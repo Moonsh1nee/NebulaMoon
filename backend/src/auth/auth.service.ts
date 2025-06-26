@@ -1,36 +1,69 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/user.schema';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from 'src/users/user.schema';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
-    const user: User | null = await this.usersService.validateUser(
-      email,
-      password,
-    );
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+  async signUp(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<{ access_token: string }> {
+    if (!email || !password) {
+      throw new BadRequestException('Email and password are required');
     }
-    const payload = { sub: user._id.toString(), email: user.email };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: { id: user._id.toString(), email: user.email, name: user.name },
-    };
+
+    const existingUser = await this.userModel.findOne({ email });
+    if (existingUser) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.userModel.create({
+      email,
+      password: hashedPassword,
+      name,
+    });
+
+    const payload = { email: user.email, sub: user._id.toString() };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return { access_token };
   }
 
-  async register(email: string, password: string, name?: string) {
-    const user = await this.usersService.create(email, password, name);
-    const payload = { sub: user._id.toString(), email: user.email };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: { id: user._id.toString(), email: user.email, name: user.name },
-    };
+  async signIn(
+    email: string,
+    password: string,
+  ): Promise<{ access_token: string }> {
+    if (!email || !password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const payload = { email: user.email, sub: user._id.toString() };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return { access_token };
+  }
+
+  async validateUser(userId: string): Promise<UserDocument | null> {
+    return this.userModel.findById(userId);
   }
 }

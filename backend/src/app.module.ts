@@ -3,16 +3,23 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TasksModule } from './tasks/tasks.module';
 import { FieldsModule } from './fields/fields.module';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
-import { IS_DEV_ENV } from './libs/common/utils/is-dev.utils';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      ignoreEnvFile: !IS_DEV_ENV,
       isGlobal: true,
+      envFilePath: '.env',
     }),
-    MongooseModule.forRoot('mongodb://localhost:27017/NebulaMoon'),
+    MongooseModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>(
+          'MONGODB_URI',
+          'mongodb://localhost:27017/NebulaMoon',
+        ),
+      }),
+      inject: [ConfigService],
+    }),
     FieldsModule,
     TasksModule,
     AuthModule,

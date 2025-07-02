@@ -1,44 +1,45 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --font-inter: var(--font-inter);
+  --font-poppins: var(--font-poppins);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* Светлая тема  */
+  --color-light-background: #ffffff; /* Основной белый фон */
+  --color-light-background-secondary: #f7f7f7; /* Светло-серый для второстепенных секций */
+  --color-light-background-tertiary: #e8ecef; /* Для карточек и панелей */
+  --color-light-text-primary: #2f3437; /* Основной тёмный текст */
+  --color-light-text-secondary: #6b7280; /* Второстепенный серый текст */
+  --color-light-text-muted: #a0aec0; /* Приглушённый текст для подсказок */
+  --color-light-border: #e2e8f0; /* Основные границы */
+  --color-light-border-subtle: #edf2f7; /* Тонкие границы */
+  --color-light-accent-1: #2f80ed; /* Синий акцент */
+  --color-light-accent-2: #27ae60; /* Зелёный акцент */
+  --color-light-accent-3: #eb5757; /* Красный акцент */
+  --color-light-accent-4: #f2c94c; /* Жёлтый акцент */
+  --color-light-accent-5: #9b51e0; /* Фиолетовый акцент */
+  --color-light-primary: #3b82f6; /* Основной синий */
+  --color-light-primary-dark: #2563eb; /* Тёмный синий для hover */
+  --color-light-secondary: #6b7280; /* Второстепенный серый */
+  --color-light-secondary-dark: #4b5563; /* Тёмный серый для hover */
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+  /* Тёмная тема  */
+  --color-dark-background: #2f3437; /* Основной тёмный фон */
+  --color-dark-background-secondary: #3f474d; /* Чуть светлее для второстепенных секций */
+  --color-dark-background-tertiary: #4b5563; /* Для карточек и панелей */
+  --color-dark-text-primary: #f7fafc; /* Основной светлый текст */
+  --color-dark-text-secondary: #cbd5e1; /* Второстепенный светло-серый текст */
+  --color-dark-text-muted: #94a3b8; /* Приглушённый текст */
+  --color-dark-border: #6b7280; /* Основные границы */
+  --color-dark-border-subtle: #9ca3af; /* Тонкие границы */
+  --color-dark-accent-1: #4b9efa; /* Светлый синий акцент */
+  --color-dark-accent-2: #4ade80; /* Светлый зелёный акцент */
+  --color-dark-accent-3: #f87171; /* Светлый красный акцент */
+  --color-dark-accent-4: #facc15; /* Светлый жёлтый акцент */
+  --color-dark-accent-5: #c084fc; /* Светлый фиолетовый акцент */
+  --color-dark-primary: #60a5fa; /* Основной синий */
+  --color-dark-primary-dark: #3b82f6; /* Тёмный синий для hover */
+  --color-dark-secondary: #94a3b8; /* Второстепенный серый */
+  --color-dark-secondary-dark: #6b7280; /* Тёмный серый для hover */
 }

@@ -1,38 +1,57 @@
+import { User } from 'src/users/user.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types, SchemaTypes, HydratedDocument } from 'mongoose';
-
-export type TaskFieldDocument = HydratedDocument<TaskField>;
-
-type fieldValue =
-  | string
-  | Date
-  | { start: Date; end: Date }
-  | string[]
-  | boolean;
-
-@Schema()
-export class TaskField {
-  @Prop({ type: Types.ObjectId, ref: 'Field', required: true })
-  fieldId: Types.ObjectId;
-
-  @Prop({ type: SchemaTypes.Mixed, required: true })
-  value: fieldValue;
-}
-
-export const TaskFieldSchema = SchemaFactory.createForClass(TaskField);
+import mongoose, { HydratedDocument } from 'mongoose';
+import { Category } from 'src/category/category.schema';
 
 export type TaskDocument = HydratedDocument<Task>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Task {
   @Prop({ required: true })
   title: string;
 
-  @Prop({ required: true })
-  userId: string;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+  userId: User | string;
 
-  @Prop([{ type: TaskFieldSchema }])
-  fields: TaskField[];
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
+  categoryId?: Category | string;
+
+  @Prop()
+  description?: string;
+
+  @Prop()
+  dueDate?: Date;
+
+  @Prop({ enum: ['low', 'medium', 'high'], default: 'low' })
+  priority?: string;
+
+  @Prop([String])
+  tags?: string[];
+
+  @Prop({
+    type: {
+      frequency: {
+        type: String,
+        enum: ['daily', 'weekly', 'monthly', 'none'],
+        default: 'none',
+      },
+      until: { type: Date, required: false },
+    },
+  })
+  recurrence?: {
+    frequency: string;
+    until?: Date;
+  };
+
+  @Prop({
+    enum: ['pending', 'in-progress', 'completed'],
+    default: 'pending',
+    required: true,
+  })
+  status: string;
+
+  @Prop([Date])
+  reminders?: Date[];
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);

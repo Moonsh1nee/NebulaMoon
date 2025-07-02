@@ -2,28 +2,55 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsDate,
+  IsEnum,
   IsArray,
-  ValidateNested,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class TaskFieldDto {
-  @IsString()
-  @IsNotEmpty()
-  fieldId: string;
-
-  @IsNotEmpty()
-  value: any;
-}
 
 export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @IsArray()
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+
+  @IsString()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => TaskFieldDto)
-  fields: TaskFieldDto[];
+  categoryId?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsDate()
+  @IsOptional()
+  dueDate?: Date;
+
+  @IsEnum(['low', 'medium', 'high'])
+  @IsOptional()
+  priority?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @IsObject()
+  @IsOptional()
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly' | 'none';
+    until?: Date;
+  };
+
+  @IsEnum(['pending', 'in-progress', 'completed'])
+  @IsOptional()
+  status?: string;
+
+  @IsArray()
+  @IsDate({ each: true })
+  @IsOptional()
+  reminders?: Date[];
 }

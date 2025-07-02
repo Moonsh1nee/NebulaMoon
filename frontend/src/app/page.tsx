@@ -1,22 +1,13 @@
 'use client';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { redirect } from 'next/navigation';
-import TaskList from '../components/TaskList';
-import CreateTask from '../components/CreateTask';
+
 import Header from '../components/Header';
-import { ToastContainer } from 'react-toastify';
-import { useGetProfileQuery, useLoginMutation } from '@/store/api/authApi';
-import { setCredentials } from '@/store/slices/authSlice';
-import Login from '@/components/Login';
+import React from 'react';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen font-inter font-size-16 bg-light-background dark:bg-dark-background">
       <Header />
-      <main className="flex-grow container mx-auto p-4">
-      </main>
-      <ToastContainer />
+      <main className="bg-light-background dark:bg-dark-background"></main>
     </div>
-  )
+  );
 }

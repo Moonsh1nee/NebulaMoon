@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TasksModule } from './tasks/tasks.module';
-import { FieldsModule } from './fields/fields.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CategoriesModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -20,9 +20,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
-    FieldsModule,
     TasksModule,
     AuthModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {}

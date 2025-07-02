@@ -4,6 +4,7 @@ import React from 'react';
 import { useLogoutMutation } from '@/store/api/authApi';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ThemeSwitcher from './ThemeSwitcher';
 
 export default function Header() {
   const [logout, { isLoading }] = useLogoutMutation();
@@ -15,17 +16,21 @@ export default function Header() {
       router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Optionally, you can show an error message to the user
     }
   };
 
   return (
-    <header className="bg-blue-500 text-white p-4">
+    <header className="bg-light-background-tertiary dark:bg-dark-background-tertiary p-2.5 border-b-1 border-light-border dark:border-dark-border">
       <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-bold">Моё приложение</h1>
+        <h1 className="text-xl font-bold font-geist-sans">
+          <Link href="/" className="text-light-text-primary dark:text-dark-text-primary">
+            NebulaMoon
+          </Link>
+        </h1>
         <Link href={'/login'} className="text-white hover:underline">
           Войти
         </Link>
+        <ThemeSwitcher />
         <button
           onClick={handleLogout}
           disabled={isLoading}

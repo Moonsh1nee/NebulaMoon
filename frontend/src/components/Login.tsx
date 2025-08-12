@@ -23,7 +23,6 @@ export default function Login() {
           authApi.endpoints.getProfile.initiate(undefined),
         ).unwrap();
         dispatch(setCredentials({ user: profileResult }));
-        console.log('Login successful:', profileResult);
         router.push('/');
       } catch (error) {
         console.error('Login failed:', error);

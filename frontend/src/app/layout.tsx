@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
-import './globals.css';
+import '../styles/main.scss';
 import { Providers } from '@/components/Providers';
 import { AuthInitializer } from '@/components/AuthInitializer';
 
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en, ru">
       <head></head>
-      <body className={`${poppins.variable} ${inter.variable}`}>
+      <body className={`${poppins.variable} ${inter.variable} text-base`}>
         <Providers>
           <AuthInitializer>{children}</AuthInitializer>
         </Providers>

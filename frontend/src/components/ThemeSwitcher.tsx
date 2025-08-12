@@ -1,6 +1,9 @@
 'use client';
 
+import MoonIcon from '@/assets/img/icons/moon-icon.svg';
+import SunIcon from '@/assets/img/icons/sun-icon.svg';
 import { useState, useEffect } from 'react';
+import styles from '@/styles/components/ThemeSwitcher.module.scss';
 
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<string>('light');
@@ -26,26 +29,22 @@ export default function ThemeSwitcher() {
   };
 
   return (
-    <div className="flex items-center space-x-4">
-      <button
-        onClick={() => handleThemeChange('light')}
-        className={`px-4 py-2 rounded flex items-center space-x-2 ${
-          theme === 'light'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white'
-        }`}
-        title="Light Theme">
-        <span>Light</span>
+    <div className={styles.wrapper}>
+      <button onClick={() => handleThemeChange('light')} className={styles.btn} title="Light Theme">
+        <SunIcon
+          className={theme === 'light' ? styles.btnIconActive : styles.btnIconInactive}
+          width={24}
+          height={24}
+          aria-label="Light Theme Icon"
+        />
       </button>
-      <button
-        onClick={() => handleThemeChange('dark')}
-        className={`px-4 py-2 rounded flex items-center space-x-2 ${
-          theme === 'dark'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white'
-        }`}
-        title="Dark Theme">
-        <span>Dark</span>
+      <button onClick={() => handleThemeChange('dark')} className={styles.btn} title="Dark Theme">
+        <MoonIcon
+          className={theme === 'dark' ? styles.btnIconActive : styles.btnIconInactive}
+          width={24}
+          height={24}
+          aria-label="Dark Theme Icon"
+        />
       </button>
     </div>
   );

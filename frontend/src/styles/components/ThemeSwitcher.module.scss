@@ -1,0 +1,30 @@
+.wrapper {
+  display: flex;
+  background-color: var(--color-background);
+  border-radius: 16px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+
+  transition: all 0.3s ease-in-out;
+}
+
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px;
+  border-radius: 50%;
+
+  svg {
+    max-width: 22px;
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+.btnIconInactive {
+  opacity: 0;
+}
+
+.btnIconActive {
+  opacity: 1;
+}

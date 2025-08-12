@@ -1,0 +1,22 @@
+.header {
+  background-color: var(--color-background-tertiary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logoTitle {
+  font-family: var(--font-poppins);
+  font-weight: 700;
+  font-size: 34px;
+}
+
+.headerInformation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

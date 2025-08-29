@@ -37,11 +37,28 @@
   right: 0;
   background: var(--color-background);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   min-width: 160px;
   z-index: 1000;
   padding: 0.5rem 0;
   outline: none;
+
+  opacity: 0;
+  transform: scale(0.95) translateY(-5px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.menuOpen {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+.menuClosing {
+  opacity: 0;
+  transform: scale(0.95) translateY(-5px);
+  pointer-events: none;
 }
 
 .menuTitle {

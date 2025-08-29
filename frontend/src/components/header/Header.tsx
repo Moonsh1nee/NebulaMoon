@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import ThemeSwitcher from './ThemeSwitcher';
 import { useAppSelector } from '@/store/hooks';
-import styles from '../styles/components/Header.module.scss';
-import HeaderUserModal from '@/components/HeaderUserModal';
+import styles from '@/styles/components/Header.module.scss';
+import HeaderUserModal from '@/components/header/HeaderUserModal';
 
 export default function Header() {
   const { user } = useAppSelector((store) => store.auth);

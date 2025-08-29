@@ -1,11 +1,17 @@
 export interface Task {
-  id: string;
+  _id: string;
   title: string;
-  fields: TaskField[];
-}
-
-export interface TaskField {
-  fieldId: string;
-  name: string;
-  value: string | number | boolean | Date | string[];
+  categoryId?: string;
+  description?: string;
+  dueDate?: string;
+  priority?: "low" | "medium" | "high";
+  tags?: string[];
+  recurrence?: {
+    frequency: "daily" | "weekly" | "monthly" | "none";
+    until?: string;
+  };
+  status: "pending" | "in-progress" | "completed";
+  reminders?: string[];
+  createdAt: string;
+  updatedAt: string;
 }

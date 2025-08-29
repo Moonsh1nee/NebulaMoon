@@ -1,37 +1,49 @@
-// Light theme
-$light-background: #ffffff;
-$light-background-secondary: #f7f7f7;
-$light-background-tertiary: #e8ecef;
-$light-text-primary: #2f3437;
-$light-text-secondary: #6b7280;
-$light-text-muted: #a0aec0;
-$light-border: #e2e8f0;
-$light-border-subtle: #edf2f7;
-$light-accent-1: #2f80ed;
-$light-accent-2: #27ae60;
-$light-accent-3: #eb5757;
-$light-accent-4: #f2c94c;
-$light-accent-5: #9b51e0;
-$light-primary: #3b82f6;
-$light-primary-dark: #2563eb;
-$light-secondary: #6b7280;
-$light-secondary-dark: #4b5563;
+/* Светлая тема по умолчанию */
+:root {
+  --color-background: #ffffff;
+  --color-background-secondary: #f7f7f7;
+  --color-background-tertiary: #e8ecef;
 
-// Dark theme
-$dark-background: #2f3437;
-$dark-background-secondary: #3f474d;
-$dark-background-tertiary: #4b5563;
-$dark-text-primary: #f7fafc;
-$dark-text-secondary: #cbd5e1;
-$dark-text-muted: #94a3b8;
-$dark-border: #6b7280;
-$dark-border-subtle: #9ca3af;
-$dark-accent-1: #4b9efa;
-$dark-accent-2: #4ade80;
-$dark-accent-3: #f87171;
-$dark-accent-4: #facc15;
-$dark-accent-5: #c084fc;
-$dark-primary: #60a5fa;
-$dark-primary-dark: #3b82f6;
-$dark-secondary: #94a3b8;
-$dark-secondary-dark: #6b7280;
+  --color-text-primary: #2f3437;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #a0aec0;
+
+  --color-border: #e2e8f0;
+  --color-border-subtle: #edf2f7;
+
+  --color-accent-1: #2f80ed;
+  --color-accent-2: #27ae60;
+  --color-accent-3: #eb5757;
+  --color-accent-4: #f2c94c;
+  --color-accent-5: #9b51e0;
+
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-secondary: #6b7280;
+  --color-secondary-dark: #4b5563;
+}
+
+/* Тёмная тема */
+[data-theme="dark"] {
+  --color-background: #2f3437;
+  --color-background-secondary: #3f474d;
+  --color-background-tertiary: #4b5563;
+
+  --color-text-primary: #f7fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+
+  --color-border: #6b7280;
+  --color-border-subtle: #9ca3af;
+
+  --color-accent-1: #4b9efa;
+  --color-accent-2: #4ade80;
+  --color-accent-3: #f87171;
+  --color-accent-4: #facc15;
+  --color-accent-5: #c084fc;
+
+  --color-primary: #60a5fa;
+  --color-primary-dark: #3b82f6;
+  --color-secondary: #94a3b8;
+  --color-secondary-dark: #6b7280;
+}

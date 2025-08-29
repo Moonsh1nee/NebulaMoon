@@ -6,31 +6,36 @@ import { useState, useEffect } from 'react';
 import styles from '@/styles/components/ThemeSwitcher.module.scss';
 
 export default function ThemeSwitcher() {
-  const [theme, setTheme] = useState<string>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+
     if (savedTheme) {
       setTheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      document.documentElement.setAttribute('data-theme', savedTheme);
     } else {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const initialTheme = prefersDark ? 'dark' : 'light';
       setTheme(initialTheme);
-      document.documentElement.classList.toggle('dark', prefersDark);
+      document.documentElement.setAttribute('data-theme', initialTheme);
       localStorage.setItem('theme', initialTheme);
     }
   }, []);
 
-  const handleThemeChange = (newTheme: string) => {
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   return (
     <div className={styles.wrapper}>
-      <button onClick={() => handleThemeChange('light')} className={styles.btn} title="Light Theme">
+      <button
+        onClick={() => handleThemeChange('light')}
+        className={styles.btn}
+        title="Light Theme"
+      >
         <SunIcon
           className={theme === 'light' ? styles.btnIconActive : styles.btnIconInactive}
           width={24}
@@ -38,7 +43,11 @@ export default function ThemeSwitcher() {
           aria-label="Light Theme Icon"
         />
       </button>
-      <button onClick={() => handleThemeChange('dark')} className={styles.btn} title="Dark Theme">
+      <button
+        onClick={() => handleThemeChange('dark')}
+        className={styles.btn}
+        title="Dark Theme"
+      >
         <MoonIcon
           className={theme === 'dark' ? styles.btnIconActive : styles.btnIconInactive}
           width={24}

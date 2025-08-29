@@ -1,25 +1,3 @@
-@use "../abstracts/variables" as *;
-
-:root {
-  --color-background: #{$light-background};
-  --color-background-secondary: #{$light-background-secondary};
-  --color-background-tertiary: #{$light-background-tertiary};
-  --color-text-primary: #{$light-text-primary};
-  --color-text-secondary: #{$light-text-secondary};
-  --color-text-muted: #{$light-text-muted};
-  --color-border: #{$light-border};
-  --color-border-subtle: #{$light-border-subtle};
-  --color-accent-1: #{$light-accent-1};
-  --color-accent-2: #{$light-accent-2};
-  --color-accent-3: #{$light-accent-3};
-  --color-accent-4: #{$light-accent-4};
-  --color-accent-5: #{$light-accent-5};
-  --color-primary: #{$light-primary};
-  --color-primary-dark: #{$light-primary-dark};
-  --color-secondary: #{$light-secondary};
-  --color-secondary-dark: #{$light-secondary-dark};
-}
-
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);

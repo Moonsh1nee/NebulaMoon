@@ -15,7 +15,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          return request?.cookies?.accessToken || null;
+          const token = request?.cookies?.accessToken;
+          return token || null;
         },
       ]),
       ignoreExpiration: false,
@@ -27,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     sub: string;
     email: string;
   }): Promise<UserDocument | null> {
-    return this.authService.validateUser(payload.sub);
+    const user = await this.authService.validateUser(payload.sub);
+    return user;
   }
 }

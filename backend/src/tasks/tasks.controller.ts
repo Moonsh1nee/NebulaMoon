@@ -14,8 +14,8 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { UserDocument } from 'src/users/user.schema';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UserDocument } from '../users/user.schema';
 
 interface AuthenticatedRequest {
   user: UserDocument;

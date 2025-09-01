@@ -1,20 +1,22 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Request,
   Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { UserDocument } from 'src/users/user.schema';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
+import { ConfigService } from '@nestjs/config';
 import { Response, Request as ExpressRequest } from 'express';
+import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { UserDocument } from 'src/users/user.schema';
-import { ConfigService } from '@nestjs/config';
 
 interface AuthenticatedRequest {
   user: UserDocument;
@@ -27,67 +29,54 @@ export class AuthController {
     private configService: ConfigService,
   ) {}
 
-  @Post('register')
-  async register(
-    @Body() registerDto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
   ) {
-    const { accessToken, userId, email } =
-      await this.authService.register(registerDto);
-
-    const payload = { sub: userId, email };
-    const refreshToken = this.authService['jwtService'].sign(payload, {
-      expiresIn: '7d',
-    });
-
-    await this.authService.saveRefreshToken(userId, refreshToken);
-
+    const secure = this.configService.get<string>('NODE_ENV') === 'production';
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
-
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      secure,
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
+  }
 
-    return { message: 'Registration successful', userId, email };
+  @Post('register')
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken, userId, email } =
+      await this.authService.register(
+        registerDto,
+        req.headers['user-agent'],
+        req.ip,
+      );
+
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return { message: 'User registered successfully', userId, email };
   }
 
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
+    @Request() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { accessToken, user } = await this.authService.login(loginDto);
+    const { accessToken, refreshToken, userId, email } =
+      await this.authService.login(loginDto, req.headers['user-agent'], req.ip);
 
-    const payload = { sub: user.userId, email: user.email };
-    const refreshToken = this.authService['jwtService'].sign(payload, {
-      expiresIn: '7d',
-    });
-
-    await this.authService.saveRefreshToken(user.userId, refreshToken);
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return { message: 'Login successful' };
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return { message: 'User logged in successfully', userId, email };
   }
 
   @Post('refresh')
@@ -95,36 +84,25 @@ export class AuthController {
     @Request() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = req.cookies?.refreshToken || '';
+    const refreshToken = req.cookies?.refreshToken;
+
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not found');
+      throw new UnauthorizedException('No refresh token provided');
     }
 
-    const { accessToken, userId, email } =
-      await this.authService.refresh(refreshToken);
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      userId,
+      email,
+    } = await this.authService.refresh(
+      refreshToken,
+      req.headers['user-agent'],
+      req.ip,
+    );
 
-    const newPayload = { sub: userId, email };
-    const newRefreshToken = this.authService['jwtService'].sign(newPayload, {
-      expiresIn: '7d',
-    });
-
-    await this.authService.saveRefreshToken(userId, newRefreshToken);
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return { message: 'Token refreshed successfully' };
+    this.setAuthCookies(res, accessToken, newRefreshToken);
+    return { message: 'Token refreshed successfully', userId, email };
   }
 
   @Post('logout')
@@ -133,26 +111,41 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies?.refreshToken;
+
     if (refreshToken) {
-      await this.authService.clearRefreshToken(refreshToken);
+      await this.authService.logout(
+        refreshToken,
+        req.headers['user-agent'],
+        req.ip,
+      );
     }
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-    });
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'strict',
-    });
-    return { message: 'Logged out successfully' };
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return { message: 'User logged out successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req: AuthenticatedRequest) {
-    const { _id, email, name } = req.user;
-    return { userId: _id.toString(), email, name };
+  async getProfile(@Request() req: ExpressRequest) {
+    return this.authService.profile(req.cookies?.accessToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('sessions')
+  async listSessions(@Request() req: AuthenticatedRequest) {
+    return this.authService.listUserSessions(req.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('sessions/:sessionId')
+  async revokeSession(
+    @Request() req: AuthenticatedRequest,
+    @Param('sessionId') sessionId: string,
+  ) {
+    await this.authService.logoutBySessionId(
+      req.user._id.toString(),
+      sessionId,
+    );
+    return { message: 'Session revoked successfully' };
   }
 }

@@ -13,11 +13,6 @@ export class User {
 
   @Prop()
   name?: string;
-
-  @Prop()
-  refreshToken?: string;
-
-  _id: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

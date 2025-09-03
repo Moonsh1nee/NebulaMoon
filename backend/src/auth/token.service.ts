@@ -7,13 +7,16 @@ export class TokenService {
   constructor(private jwtService: JwtService) {}
 
   generateAccessToken(userId: string, email: string): string {
-    return this.jwtService.sign({ sub: userId, email, type: 'access' });
+    return this.jwtService.sign(
+      { sub: userId, email, type: 'access' },
+      { expiresIn: '1d' },
+    );
   }
 
   generateRefreshToken(userId: string, email: string): string {
     return this.jwtService.sign(
       { sub: userId, email, type: 'refresh' },
-      { expiresIn: '7d' },
+      { expiresIn: '30d' },
     );
   }
 

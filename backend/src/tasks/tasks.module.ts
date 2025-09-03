@@ -4,14 +4,12 @@ import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
 import { Task, TaskSchema } from './task.schema';
 import { User, UserSchema } from '../users/user.schema';
-import { Category, CategorySchema } from 'src/category/category.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Task.name, schema: TaskSchema },
       { name: User.name, schema: UserSchema },
-      { name: Category.name, schema: CategorySchema },
     ]),
   ],
   controllers: [TasksController],

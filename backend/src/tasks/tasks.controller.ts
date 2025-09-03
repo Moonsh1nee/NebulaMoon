@@ -37,28 +37,7 @@ export class TasksController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(
-    @Req() req: AuthenticatedRequest,
-    @Query('categoryId') categoryId?: string,
-  ) {
-    return this.tasksService.findAll(req.user._id.toString(), categoryId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.tasksService.update(id, updateTaskDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.tasksService.remove(id);
+  async findAll(@Req() req: AuthenticatedRequest) {
+    return this.tasksService.findAll(req.user._id.toString());
   }
 }

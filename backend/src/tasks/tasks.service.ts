@@ -17,46 +17,10 @@ export class TasksService {
       ...createTaskDto,
       userId,
     });
-    return task.populate('categoryId');
-  }
-
-  async findAll(userId: string, categoryId?: string): Promise<TaskDocument[]> {
-    const query: { userId: string; categoryId?: string } = { userId };
-    if (categoryId) {
-      query['categoryId'] = categoryId;
-    }
-    return this.taskModel.find(query).populate('categoryId').exec();
-  }
-
-  async findOne(id: string): Promise<TaskDocument> {
-    const task = await this.taskModel
-      .findById(id)
-      .populate('categoryId')
-      .exec();
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
     return task;
   }
 
-  async update(
-    id: string,
-    updateTaskDto: UpdateTaskDto,
-  ): Promise<TaskDocument> {
-    const task = await this.taskModel
-      .findByIdAndUpdate(id, updateTaskDto, { new: true })
-      .populate('categoryId')
-      .exec();
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
-    return task;
-  }
-
-  async remove(id: string): Promise<void> {
-    const result = await this.taskModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException('Task not found');
-    }
+  async findAll(userId: string): Promise<TaskDocument[]> {
+    return this.taskModel.find({ userId }).exec();
   }
 }

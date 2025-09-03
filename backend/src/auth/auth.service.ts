@@ -13,13 +13,10 @@ import { LoginDto } from './dto/login.dto';
 import { Session, SessionDocument } from './session.schema';
 import { TokenService } from './token.service';
 import { TokenPayload } from './token-payload';
-import { UAParser } from 'ua-parser-js';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-
-  private readonly MAX_ACTIVE_SESSIONS = 5;
 
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
@@ -58,9 +55,6 @@ export class AuthService {
       ip,
     );
 
-    await this.revokeByFingerprint(newUser._id.toString(), userAgent, ip);
-    await this.enforceSessionLimit(newUser._id.toString(), 1);
-
     return {
       accessToken,
       refreshToken,
@@ -91,10 +85,40 @@ export class AuthService {
       user.email,
     );
 
-    await this.revokeByFingerprint(user._id.toString(), userAgent, ip);
-    await this.enforceSessionLimit(user._id.toString(), 1);
+    const existingSession = await this.sessionModel.findOne({
+      userId: user._id,
+      userAgent,
+      ip,
+      revoked: false,
+    });
 
-    await this.createSession(user._id.toString(), refreshToken, userAgent, ip);
+    if (existingSession) {
+      await this.updateSessionToken(
+        existingSession._id.toString(),
+        refreshToken,
+        userAgent,
+        ip,
+      );
+    } else {
+      const revokedSession = await this.sessionModel.findOne({
+        userId: user._id,
+        userAgent,
+        ip,
+        revoked: true,
+      });
+
+      if (revokedSession) {
+        revokedSession.revokedAt = new Date();
+        await revokedSession.save();
+      }
+
+      await this.createSession(
+        user._id.toString(),
+        refreshToken,
+        userAgent,
+        ip,
+      );
+    }
 
     return {
       accessToken,
@@ -148,10 +172,8 @@ export class AuthService {
       user.email,
     );
 
-    await this.revokeSession(session._id.toString());
-    await this.enforceSessionLimit(user._id.toString(), 1);
-    await this.createSession(
-      user._id.toString(),
+    await this.updateSessionToken(
+      session._id.toString(),
       newRefreshToken,
       userAgent,
       ip,
@@ -176,8 +198,6 @@ export class AuthService {
       );
       if (session) {
         await this.revokeSession(session._id.toString());
-      } else {
-        await this.revokeByFingerprint(payload.sub, userAgent, ip);
       }
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -220,10 +240,6 @@ export class AuthService {
       userAgent: s.userAgent,
       ip: s.ip,
       revoked: s.revoked,
-      deviceName: s.deviceName,
-      browser: s.browser,
-      os: s.os,
-      platform: s.platform,
     }));
   }
 
@@ -232,26 +248,6 @@ export class AuthService {
   }
 
   // Session helpers
-  private parseUserAgent(userAgent?: string) {
-    const parser = new UAParser(userAgent || undefined);
-    const browser = parser.getBrowser();
-    const os = parser.getOS();
-    const device = parser.getDevice();
-
-    const deviceName =
-      [device.vendor, device.model].filter(Boolean).join(' ').trim() ||
-      'Unknown Device';
-
-    return {
-      browser: browser.name
-        ? `${browser.name} ${browser.version || ''}`.trim()
-        : 'Unknown Browser',
-      os: os.name ? `${os.name} ${os.version || ''}`.trim() : 'Unknown OS',
-      platform: device.type || 'Unknown Platform',
-      deviceName,
-    };
-  }
-
   private async createSession(
     userId: string,
     refreshToken: string,
@@ -259,19 +255,11 @@ export class AuthService {
     ip?: string,
   ) {
     const hash = await bcrypt.hash(refreshToken, 10);
-    const { browser, os, platform, deviceName } =
-      this.parseUserAgent(userAgent);
-
     return this.sessionModel.create({
       userId: new Types.ObjectId(userId),
       refreshTokenHash: hash,
       userAgent,
       ip,
-      deviceName,
-      browser,
-      os,
-      platform,
-      lastUsedAt: new Date(),
     });
   }
 
@@ -289,8 +277,6 @@ export class AuthService {
     });
     for (const s of session) {
       if (await bcrypt.compare(refreshToken, s.refreshTokenHash)) {
-        s.lastUsedAt = new Date();
-        await s.save();
         return s;
       }
     }
@@ -314,50 +300,6 @@ export class AuthService {
       },
       { new: true },
     );
-  }
-
-  private async revokeByFingerprint(
-    userId: string,
-    userAgent?: string,
-    ip?: string,
-  ) {
-    await this.sessionModel.updateMany(
-      {
-        userId: new Types.ObjectId(userId),
-        userAgent,
-        ip,
-        revoked: false,
-      },
-      { $set: { revoked: true, revokedAt: new Date() } },
-    );
-  }
-
-  private async enforceSessionLimit(userId: string, willCreate = 1) {
-    const activeCount = await this.sessionModel.countDocuments({
-      userId: new Types.ObjectId(userId),
-      revoked: false,
-    });
-
-    const targetMax = this.MAX_ACTIVE_SESSIONS - willCreate;
-    if (activeCount > targetMax) {
-      const toRevoke = activeCount - targetMax;
-      const oldest = await this.sessionModel
-        .find({
-          userId: new Types.ObjectId(userId),
-          revoked: false,
-        })
-        .sort({ createdAt: 1 })
-        .limit(toRevoke)
-        .select('_id');
-
-      const ids = oldest.map((s) => s._id);
-      if (ids.length) {
-        await this.sessionModel.updateMany(
-          { _id: { $in: ids } },
-          { $set: { revoked: true, revokedAt: new Date() } },
-        );
-      }
-    }
   }
 
   private async revokeSession(sessionId: string) {
